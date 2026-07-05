@@ -1,0 +1,235 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────
+
+enum Role {
+  USER
+  OFFICER_BANK
+  OFFICER_NPCI
+  OMBUDSMAN
+  CYBERCRIME
+  JUROR
+  ADMIN
+  AUDITOR
+}
+
+enum AuthEvent {
+  REGISTER
+  LOGIN_SUCCESS
+  LOGIN_FAILED
+  LOGIN_BLOCKED
+  PASSWORD_RESET_REQUESTED
+  PASSWORD_RESET_COMPLETED
+  EMAIL_VERIFIED
+  TWO_FACTOR_ENABLED
+  TWO_FACTOR_DISABLED
+  SESSION_REVOKED
+  ACCOUNT_LOCKED
+  ACCOUNT_UNLOCKED
+  SUSPICIOUS_LOGIN
+}
+
+enum DisputeType {
+  FAILED_TXN
+  UNAUTHORIZED_PAYMENT
+  REFUND_DELAY
+  MERCHANT_SCAM
+  PHISHING
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum CaseStatus {
+  FILED
+  CLASSIFIED
+  ROUTED
+  UNDER_REVIEW
+  ESCALATED
+  JUROR_REVIEW
+  RESOLVED
+  CLOSED
+}
+
+enum Authority {
+  BANK
+  NPCI
+  RBI_OMBUDSMAN
+  CYBERCRIME
+  CONSUMER_FORUM
+}
+
+enum FraudVerdict {
+  SAFE
+  SUSPICIOUS
+  DANGEROUS
+}
+
+enum JurorVerdict {
+  FAVOUR_USER
+  FAVOUR_AUTHORITY
+  INCONCLUSIVE
+}
+
+// ─── Auth models ──────────────────────────────────────────
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  passwordHash     String
+  role             Role      @default(USER)
+  emailVerified    Boolean   @default(false)
+  twoFactorEnabled Boolean   @default(false)
+  twoFactorSecret  String?   // AES-256-GCM encrypted TOTP secret
+  isLocked         Boolean   @default(false)
+  lockedAt         DateTime?
+  failedLoginCount Int       @default(0)
+  lastLoginAt      DateTime?
+  lastLoginIp      String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  sessions          Session[]
+  emailVerifications EmailVerification[]
+  passwordResets    PasswordReset[]
+  authLogs          AuthAuditLog[]
+  cases             Case[]
+  jurorReviews      JurorReview[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshToken String   @unique // SHA-256 hashed — raw token only to client
+  userAgent    String?
+  ipAddress    String?
+  isRevoked    Boolean  @default(false)
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  lastUsedAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+model EmailVerification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String    @unique // 6-digit OTP
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model PasswordReset {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String    @unique // SHA-256 hashed token
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model AuthAuditLog {
+  id        String    @id @default(cuid())
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  event     AuthEvent
+  ipAddress String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([event])
+}
+
+// ─── Case models ──────────────────────────────────────────
+
+model Case {
+  id             String      @id @default(cuid())
+  userId         String
+  user           User        @relation(fields: [userId], references: [id])
+  transactionId  String?
+  upiId          String?
+  amount         Float?
+  bankName       String?
+  appUsed        String?
+  description    String      @db.Text
+  disputeType    DisputeType
+  severity       Severity    @default(LOW)
+  status         CaseStatus  @default(FILED)
+  assignedTo     Authority?
+  slaDeadline    DateTime?
+  aiSummary      String?     @db.Text
+  draftComplaint String?     @db.Text
+  evidenceUrls   String[]
+  closedAt       DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  auditEvents  AuditEvent[]
+  fraudChecks  FraudCheck[]
+  jurorReviews JurorReview[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([assignedTo])
+}
+
+model AuditEvent {
+  id        String   @id @default(cuid())
+  caseId    String
+  case      Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  eventType String
+  data      Json
+  hash      String   // SHA-256(prevHash + eventType + JSON.stringify(data))
+  prevHash  String   // "GENESIS" for the first event
+  actorId   String?
+  createdAt DateTime @default(now())
+
+  @@index([caseId])
+}
+
+model FraudCheck {
+  id        String       @id @default(cuid())
+  caseId    String?
+  case      Case?        @relation(fields: [caseId], references: [id], onDelete: SetNull)
+  url       String
+  verdict   FraudVerdict
+  sources   Json
+  checkedAt DateTime     @default(now())
+
+  @@index([caseId])
+}
+
+model JurorReview {
+  id          String        @id @default(cuid())
+  caseId      String
+  case        Case          @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  jurorId     String
+  juror       User          @relation(fields: [jurorId], references: [id])
+  verdict     JurorVerdict?
+  reasoning   String?       @db.Text
+  submittedAt DateTime?
+  createdAt   DateTime      @default(now())
+
+  @@index([caseId])
+  @@index([jurorId])
+}
