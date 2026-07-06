@@ -36,8 +36,18 @@ export function proxy(req: NextRequest) {
     return NextResponse.next()
   }
 
+  // 1. Check for the cookie (used during page navigations like router.push)
+  const cookieToken = req.cookies.get("access_token")?.value
+
+  // 2. Check for the Auth header (used for client-side API fetches)
   const authHeader = req.headers.get("authorization")
-  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null
+  const headerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null
+
+  // 3. Fallback logic
+  const token = cookieToken || headerToken
+
+  // const authHeader = req.headers.get("authorization")
+  // const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null
 
   if (!token) {
     // Page request → redirect to login

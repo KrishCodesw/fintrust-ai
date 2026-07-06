@@ -155,7 +155,7 @@ export async function POST(req: Request) {
 
     await logAuthEvent({ userId: user.id, event: "LOGIN_SUCCESS", request: req })
 
-    return new NextResponse(
+    const response = new NextResponse(
       JSON.stringify({
         accessToken,
         user: { id: user.id, email: user.email, role: user.role },
@@ -164,10 +164,19 @@ export async function POST(req: Request) {
         status: 200,
         headers: {
           "Content-Type": "application/json",
-          "Set-Cookie": cookie,
         },
       }
     )
+    response.headers.append("Set-Cookie", cookie)
+
+    // 3. Attach the JWT access token as a second cookie so middleware can read it
+    // Note: Adjust Max-Age to match your JWT expiration time (e.g., 3600 = 1 hour)
+    response.headers.append(
+      "Set-Cookie", 
+      `access_token=${accessToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=3600`
+    )
+
+    return response
   } catch (err) {
     console.error("[login]", err)
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 })
