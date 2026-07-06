@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // ─── Enums ────────────────────────────────────────────────
@@ -90,7 +89,7 @@ model User {
   role             Role      @default(USER)
   emailVerified    Boolean   @default(false)
   twoFactorEnabled Boolean   @default(false)
-  twoFactorSecret  String?   // AES-256-GCM encrypted TOTP secret
+  twoFactorSecret  String?
   isLocked         Boolean   @default(false)
   lockedAt         DateTime?
   failedLoginCount Int       @default(0)
@@ -99,19 +98,19 @@ model User {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  sessions          Session[]
+  sessions           Session[]
   emailVerifications EmailVerification[]
-  passwordResets    PasswordReset[]
-  authLogs          AuthAuditLog[]
-  cases             Case[]
-  jurorReviews      JurorReview[]
+  passwordResets     PasswordReset[]
+  authLogs           AuthAuditLog[]
+  cases              Case[]
+  jurorReviews       JurorReview[]
 }
 
 model Session {
   id           String   @id @default(cuid())
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  refreshToken String   @unique // SHA-256 hashed — raw token only to client
+  refreshToken String   @unique
   userAgent    String?
   ipAddress    String?
   isRevoked    Boolean  @default(false)
@@ -126,7 +125,7 @@ model EmailVerification {
   id        String    @id @default(cuid())
   userId    String
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String    @unique // 6-digit OTP
+  token     String    @unique
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime  @default(now())
@@ -138,7 +137,7 @@ model PasswordReset {
   id        String    @id @default(cuid())
   userId    String
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String    @unique // SHA-256 hashed token
+  token     String    @unique
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime  @default(now())
@@ -199,8 +198,8 @@ model AuditEvent {
   case      Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
   eventType String
   data      Json
-  hash      String   // SHA-256(prevHash + eventType + JSON.stringify(data))
-  prevHash  String   // "GENESIS" for the first event
+  hash      String
+  prevHash  String
   actorId   String?
   createdAt DateTime @default(now())
 
