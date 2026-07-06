@@ -1,7 +1,7 @@
 import speakeasy from "speakeasy"
 import QRCode from "qrcode"
 
-const APP_NAME = "DisputeResolve"
+const APP_NAME = "FinTrust-AI"
 
 export function generateTOTPSecret(email: string) {
   return speakeasy.generateSecret({

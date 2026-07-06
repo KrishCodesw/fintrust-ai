@@ -107,7 +107,7 @@ export default function RegisterPage() {
       <CardHeader className="space-y-1">
         <div className="flex items-center gap-2 mb-2">
           <ShieldCheck className="h-6 w-6 text-blue-600" />
-          <span className="font-semibold text-lg">DisputeResolve</span>
+          <span className="font-semibold text-lg">FinTrust-AI</span>
         </div>
         <CardTitle className="text-2xl">Create account</CardTitle>
         <CardDescription>File and track digital payment disputes</CardDescription>

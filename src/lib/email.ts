@@ -1,13 +1,13 @@
 import { Resend } from "resend"
 
 const resend = new Resend(process.env.RESEND_API_KEY)
-const FROM = "DisputeResolve <noreply@disputeresolve.in>"
+const FROM = "FinTrust-AI <noreply@fintrust-ai.in>"
 
 export async function sendVerificationEmail(email: string, otp: string) {
   return resend.emails.send({
     from: FROM,
     to: email,
-    subject: "Verify your email — DisputeResolve",
+    subject: "Verify your email — FinTrust-AI",
     html: `<p>Your verification code is: <strong>${otp}</strong></p><p>This code expires in 15 minutes.</p>`,
   })
 }
@@ -16,7 +16,7 @@ export async function sendPasswordResetEmail(email: string, resetLink: string) {
   return resend.emails.send({
     from: FROM,
     to: email,
-    subject: "Reset your password — DisputeResolve",
+    subject: "Reset your password — FinTrust-AI",
     html: `<p>Click the link below to reset your password. This link expires in 1 hour.</p><p><a href="${resetLink}">${resetLink}</a></p>`,
   })
 }
@@ -25,7 +25,7 @@ export async function sendSuspiciousLoginAlert(email: string, ip: string) {
   return resend.emails.send({
     from: FROM,
     to: email,
-    subject: "New sign-in detected — DisputeResolve",
+    subject: "New sign-in detected — FinTrust-AI",
     html: `<p>We noticed a sign-in to your account from a new location (IP: ${ip}).</p><p>If this was you, no action needed. If not, please reset your password immediately.</p>`,
   })
 }
