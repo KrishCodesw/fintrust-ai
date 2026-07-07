@@ -94,7 +94,10 @@ export default function CaseDetailPage() {
         </button>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold text-gray-900">Case detail</h1>
+            <div className="flex items-center gap-3 flex-wrap">
+          <h1 className="text-xl font-semibold text-gray-900">Case detail</h1>
+          <PdfReportButton caseId={id} />
+        </div>
             <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", STATUS_COLORS[caseData.status])}>
               {caseData.status.replace(/_/g, " ")}
             </span>

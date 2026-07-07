@@ -12,6 +12,7 @@ import {
   LogOut,
   Users,
   Gavel,
+  Settings,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -22,6 +23,7 @@ export function DashboardNav() {
   const userLinks = [
     { href: "/user/my-cases",     label: "My Cases",    icon: FolderOpen },
     { href: "/user/new-complaint",label: "File Dispute", icon: FileText },
+    { href: "/user/settings",     label: "Settings",    icon: Settings },
   ]
 
   const officerLinks = [
