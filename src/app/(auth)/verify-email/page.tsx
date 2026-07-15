@@ -22,9 +22,9 @@ export default function VerifyEmailPage() {
           registration page to complete your account setup.
         </p>
         <p className="text-sm text-gray-400">The code expires in 15 minutes.</p>
-        <Button asChild variant="outline" className="w-full">
-          <Link href="/register">Back to registration</Link>
-        </Button>
+        <Link href="/register" className="w-full">
+          <Button variant="outline" className="w-full">Back to registration</Button>
+        </Link>
       </CardContent>
     </Card>
   )

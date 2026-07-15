@@ -63,12 +63,12 @@ export default function MyCasesPage() {
           <h1 className="text-2xl font-semibold text-gray-900">My cases</h1>
           <p className="text-sm text-gray-500 mt-0.5">Track your payment disputes</p>
         </div>
-        <Button asChild>
-          <Link href="/user/new-complaint">
+        <Link href="/user/new-complaint">
+          <Button>
             <Plus className="h-4 w-4 mr-1.5" />
             File dispute
-          </Link>
-        </Button>
+          </Button>
+        </Link>
       </div>
 
       {loading && (
